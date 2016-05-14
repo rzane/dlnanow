@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var chalk = require('chalk');
-var log = require('single-line-log').stdout;
+var logger = require('single-line-log');
 var middleware = require('ware')();
 var opts = require('minimist')(process.argv.slice(2));
 var xmlb = require('xmlbuilder');
@@ -39,8 +39,15 @@ if (opts._.length) {
   });
 }
 
-function info (msg, color) {
-  log(chalk[color || 'yellow'](msg.join(' ') + '...'));
+function log (color) {
+  return function (msg) {
+    var i = 1;
+    logger.stdout(chalk[color](
+      msg.replace(/%s/g, function (words) {
+        return words[i++];
+      }.bind(null, arguments))
+    ));
+  }
 }
 
 function abort (msg) {
@@ -48,15 +55,17 @@ function abort (msg) {
   process.exit(1);
 }
 
+// TODO: handle multiple detected devices
 function deviceLocated (device) {
-  info(['Located', device.name], 'cyan');
+  log('cyan')('Located %s...', device.name);
 
+  browser.destroy();
   middleware.run({
     mode: 'launch',
     options: opts
   }, function (err, ctx) {
     if (err) abort(err.message);
-    info(['Starting stream on', device.name], 'yellow');
+    log('magenta')('Starting stream on %s...', device.name);
     play(device, ctx.options.playlist[0]);
   });
 }
@@ -71,7 +80,7 @@ function play (device, media) {
     metadata: buildMetadata(media)
   }, function (err) {
     if (err) abort(err.message);
-    info(['Playing', title, 'on', device.name], 'green');
+    log('green')('Playing %s on %s...', title, device.name);
   });
 }
 
@@ -96,13 +105,7 @@ function buildMetadata (media) {
   .end({ pretty: false });
 }
 
+log('yellow')('Searching for devices...');
 var browser = new Browser();
-
-// TODO: handle multiple detected devices
-browser.onDevice(function (device) {
-  browser.destroy();
-  deviceLocated(device);
-});
-
-info(['Searching for devices']);
+browser.onDevice(deviceLocated);
 browser.start();
