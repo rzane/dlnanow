@@ -15,7 +15,7 @@ middleware.use(require('castnow/plugins/subtitles'));
 if (opts.help) {
   console.log([
     '',
-    'Usage: dlnanow [<media>, <media>, ...] [OPTIONS]',
+    'Usage: dlnanow <media> [OPTIONS]',
     '',
     'Option                   Meaning',
     '--tomp4                  Convert file to mp4 during playback',
