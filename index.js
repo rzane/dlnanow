@@ -10,19 +10,22 @@ middleware.use(require('castnow/plugins/stdin'));
 middleware.use(require('castnow/plugins/torrent'));
 middleware.use(require('castnow/plugins/localfile'));
 middleware.use(require('castnow/plugins/transcode'));
+middleware.use(require('castnow/plugins/subtitles'));
 
 if (opts.help) {
   console.log([
     '',
     'Usage: dlnanow [<media>, <media>, ...] [OPTIONS]',
     '',
-    'Option                  Meaning',
-    '--tomp4                 Convert file to mp4 during playback',
-    '--myip <ip>             Your local IP address',
-    '--peerflix-* <value>    Pass options to peerflix',
-    '--ffmpeg-* <value>      Pass options to ffmpeg',
-    '--type <type>           Explicitly set the mime-type (e.g. "video/mp4")',
-    '--help                  This help screen',
+    'Option                   Meaning',
+    '--tomp4                  Convert file to mp4 during playback',
+    '--myip <ip>              Your local IP address',
+    '--subtitles <path/url>   Path or URL to an SRT or VTT file',
+    '--peerflix-* <value>     Pass options to peerflix',
+    '--ffmpeg-* <value>       Pass options to ffmpeg',
+    '--quiet                  No output',
+    '--type <type>            Explicitly set the mime-type (e.g. "video/mp4")',
+    '--help                   This help screen',
     ''
   ].join('\n'));
 
@@ -39,6 +42,8 @@ if (opts._.length) {
 
 function log (color) {
   return function (msg) {
+    if (opts.quiet) return;
+
     var i = 1;
     logger.stdout(chalk[color](
       msg.replace(/%s/g, function (words) {
@@ -49,20 +54,25 @@ function log (color) {
 }
 
 function abort (msg) {
-  console.error(chalk.red(msg));
+  log('red')(msg);
   process.exit(1);
 }
 
 function startPlayback (player, media) {
-  var title = media.media.metadata.title;
+  var info = (media && media.media || {});
+  var title = info.metadata && info.metadata.title || 'dlnanow';
+  var subtitles = (info.tracks || []).map(function (track) {
+    return track.trackContentId;
+  });
 
   player.on('error', function (err) {
     abort('DLNA error', err.message);
   });
 
   player.play(media.path, {
-    title: 'DLNANow - ' + title,
-    type: media.type
+    title: title,
+    type: opts.type || media.type,
+    subtitles: subtitles
   }, function (err) {
     if (err) abort('Failed to start', err);
     log('green')('Playing %s on %s...', title, player.name);
@@ -84,4 +94,4 @@ dlnacasts.on('update', function (player) {
     log('magenta')('Starting stream on %s...', player.name);
     startPlayback(player, ctx.options.playlist[0]);
   });
-})
+});
