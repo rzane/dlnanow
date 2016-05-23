@@ -28,3 +28,28 @@ $ dlnanow ./myvideo.mp4 --subtitles </local/path/to/subtitles.srt>
 # transcode some other video format to mp4 while playback (requires ffmpeg)
 $ dlnanow ./myvideo.avi --tomp4
 ```
+
+## Or, as a module
+
+```javascript
+var dlnanow = require('dlnanow');
+
+// Add some logging
+dlnanow.use(function (ctx, next) {
+  ctx.on('status', function (status) {
+    console.log(status);
+  });
+  next();
+});
+
+// Enable some castnow plugins
+dlnanow.enable('stdin');
+dlnanow.enable('torrent');
+dlnanow.enable('localfile');
+dlnanow.enable('transcode');
+dlnanow.enable('subtitles');
+
+// Go!
+dlnanow.launch(opts, function (err, player, ctx) {
+});
+```
