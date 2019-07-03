@@ -1,5 +1,7 @@
 # dlnanow
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/rzane/dlnanow.svg)](https://greenkeeper.io/)
+
 This is a command-line utility that can be used to stream media files to your DLNA-capable devices (Smart TVs, Xbox One, etc). It supports playback of local video files, videos on the web, and torrents.
 
 Internally, this script simply wraps [castnow](https://github.com/xat/castnow)'s middleware functions for serving content.
